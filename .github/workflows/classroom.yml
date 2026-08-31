@@ -1,0 +1,56 @@
+name: Autograding Tests
+'on':
+  - push
+  - workflow_dispatch
+  - repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Integrity check - tests, pom.xml and grading.json must be unchanged
+        run: |
+          EXPECTED="7daa0d21b1a4dc93441f789fb40ffc12792d531891ba095065ff7ff03d9d0506"
+          ACTUAL=$( (for f in $(find src/test/java -type f -name '*.java' | LC_ALL=C sort) pom.xml grading.json; do sed 's/\r$//' "$f"; done) | sha256sum | cut -d' ' -f1)
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::The test files, pom.xml, or grading.json in this repository differ from the assignment template. Grading has been stopped. Restore the original files (git checkout origin/main -- src/test pom.xml grading.json) and push again."
+            exit 1
+          fi
+          echo "Integrity check passed."
+      - name: "spin returns a random value in 1..sectors (40)"
+        id: spin
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "spin returns a random value in 1..sectors"
+          setup-command: ''
+          command: mvn -B -q test -Dtest=SpinTest -Dsurefire.failIfNoSpecifiedTests=false
+          timeout: 5
+          max-score: 40
+      - name: "currentRun tracks the length of the current run (60)"
+        id: currentrun
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "currentRun tracks the length of the current run"
+          setup-command: ''
+          command: mvn -B -q test -Dtest=CurrentRunTest -Dsurefire.failIfNoSpecifiedTests=false
+          timeout: 5
+          max-score: 60
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          SPIN_RESULTS: "${{ steps.spin.outputs.result }}"
+          CURRENTRUN_RESULTS: "${{ steps.currentrun.outputs.result }}"
+        with:
+          runners: spin,currentrun

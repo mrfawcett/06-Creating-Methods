@@ -1,0 +1,4 @@
+[
+ {"test": "SpinTest",       "name": "spin returns a random value in 1..sectors",        "points": 40},
+ {"test": "CurrentRunTest", "name": "currentRun tracks the length of the current run",  "points": 60}
+]
