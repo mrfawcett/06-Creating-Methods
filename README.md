@@ -1,6 +1,6 @@
 # Game Spinner
 
-**Unit 2A — Classes, Methods & Strings** · Pairs with lecture 2.2 Methods & Keywords (Day 1–2); uses the `Math.random()` range formula from 2.4
+**Unit 2A — Classes, Methods & Strings**
 
 A board game needs a spinner: a disc split into equal sectors, numbered
 1 through *n*. Spin it and the arrow lands on one of them. The game also
